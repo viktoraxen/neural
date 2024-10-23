@@ -1,5 +1,6 @@
 add_library(math STATIC
     src/math.cpp
+    src/matrix.cpp
 )
 
 target_include_directories(math PUBLIC

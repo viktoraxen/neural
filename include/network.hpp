@@ -1,12 +1,15 @@
 #include "layer.hpp"
 
+using namespace Math;
+
 class Network
 {
 public:
     Network(int inputs, int depth, int width, int outputs);
     ~Network() = default;
 
-    Math::Matrix predict(const Math::Matrix& input, Math::Matrix& output) const;
+    Matrix forward_layer(const Layer& layer, const Matrix& input) const;
+    Matrix predict(const Math::Matrix& input, Math::Matrix& output) const;
 
     const Layer& layer(int index) const { return m_layers[index]; }
 

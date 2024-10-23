@@ -3,8 +3,6 @@
 #include <stdexcept>
 #include <iostream>
 
-using namespace Math;
-
 Network::Network(int inputs, int depth, int width, int outputs)
     : m_inputs(inputs)
     , m_depth(depth)
@@ -21,6 +19,15 @@ Network::Network(int inputs, int depth, int width, int outputs)
     }
 
     m_layers.push_back(Layer(m_width, m_outputs));
+}
+
+Matrix Network::forward_layer(const Layer& layer, const Matrix& input) const
+{
+    Matrix stacked_biases = Matrix::stack(layer.biases(), input.rows());
+
+    Matrix a = input.multiply(layer.weights()) + stacked_biases;
+
+    return a.sigmoid();
 }
 
 Matrix Network::predict(const Matrix& input, Matrix& output) const
