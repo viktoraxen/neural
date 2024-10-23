@@ -12,7 +12,7 @@ enable_testing()
 add_subdirectory(math)
 
 add_executable(neural 
-    main.cpp
+    src/main.cpp
     src/network.cpp
     src/layer.cpp
 )
