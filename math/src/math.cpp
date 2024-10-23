@@ -1,4 +1,5 @@
 #include "math.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <cassert>
@@ -10,6 +11,11 @@
 
 namespace Math
 {
+    Matrix::Matrix()
+        : m_rows(0)
+        , m_cols(0)
+    {}
+
     // Constructor
     Matrix::Matrix(int rows, int cols)
         : m_rows(rows)
@@ -124,6 +130,11 @@ namespace Math
         return result;
     }
 
+    Matrix Matrix::sigmoid() const
+    {
+        return scalar_operation(0, [](double a, double _) { return 1 / (1 + exp(-a)); });
+    }
+
     Matrix Matrix::operator+(const Matrix& other) const
     {
         return elementwise_operation(other, LAMBDA_ADD);
@@ -219,6 +230,21 @@ namespace Math
         }
     }
 
+    Matrix Matrix::filled(int rows, int cols, double value)
+    {
+        Matrix result(rows, cols);
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                result[i][j] = value;
+            }
+        }
+
+        return result;
+    }
+
     Matrix Matrix::identity(int size)
     {
         Matrix result(size, size);
@@ -226,6 +252,21 @@ namespace Math
         for (int i = 0; i < size; i++)
         {
             result[i][i] = 1;
+        }
+
+        return result;
+    }
+
+    Matrix Matrix::stack(const Matrix& a, int rows)
+    {
+        Matrix result(rows, a.cols());
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < a.cols(); j++)
+            {
+                result[i][j] = a[0][j];
+            }
         }
 
         return result;

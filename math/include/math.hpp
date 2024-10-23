@@ -1,16 +1,21 @@
 #ifndef MATH_HPP
 #define MATH_HPP
 
+#include <cmath>
 #include <vector>
 #include <functional>
 
 namespace Math
 {
+    static double sigmoid(double a) { return 1 / (1 + exp(-a)); }
+
     class Matrix
     {
     public:
         static Matrix identity(int size);
+        static Matrix stack(const Matrix& a, int rows);
 
+        Matrix();
         Matrix(int rows, int cols);
         Matrix(const Matrix& other);
         Matrix& operator=(const Matrix& other);
@@ -34,6 +39,8 @@ namespace Math
         Matrix dot(const Matrix& other) const;
         Matrix cross(const Matrix& other) const;
 
+        Matrix sigmoid() const;
+
         bool operator==(const Matrix& other) const;
 
         Matrix operator+(const Matrix& other) const;
@@ -48,6 +55,8 @@ namespace Math
 
         // DEBUG
         void print() const;
+        
+        static Matrix filled(int rows, int cols, double value);
 
     private:
         int m_rows;
@@ -59,7 +68,6 @@ namespace Math
         Matrix elementwise_operation(const Matrix& other, std::function<double(double, double)> op) const;
         void copy(const Matrix& other);
     };
-
 }
 
 #endif // MATH_HPP

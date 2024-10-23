@@ -1,38 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
+add_library(math STATIC
+    src/math.cpp
+)
 
-project(Neural VERSION 1.0)
+target_include_directories(math PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set_target_properties(math PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
-include_directories(include)
+option(MATH_LIB_TESTS "Build the math library tests" OFF)
 
-add_library(math STATIC src/math.cpp)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-enable_testing()
-
-# Download and configure GoogleTest
-# include(FetchContent)
-#
-# FetchContent_Declare(
-#   googletest
-#   URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip  # Latest stable version
-# )
-#
-# # Download the content
-# FetchContent_MakeAvailable(googletest)
-
-find_package(GTest REQUIRED)
-
-add_executable(tests test/main.cpp)
-target_link_libraries(tests GTest::gtest GTest::gtest_main pthread math)
-
-add_test(NAME Tests COMMAND tests)
-
-# find_program(valgrind "valgrind")
-#
-# if(valgrind)
-#     add_test(name matrixvalgrindtest command ${valgrind} --leak-check=full ./matrix_test)
-# endif()
+if(MATH_LIB_TESTS)
+    add_subdirectory(test)
+endif()
