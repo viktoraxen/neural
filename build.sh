@@ -12,15 +12,17 @@ function exit_on_failure() {
 }
 
 MATH_LIB_TESTS=OFF
+USE_VALGRIND=OFF
 RUN_NEURAL=OFF
 VERBOSE=OFF
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -t|--testing) MATH_LIB_TESTS=ON ;; # Enable testing if the flag is passed
-        -r|--run)     RUN_NEURAL=ON ;;     # Enable running the main program if the flag is passed
-        -v|--verbose) VERBOSE=ON ;;        # Enable verbose output if the flag is passed
+        -t|--testing)      MATH_LIB_TESTS=ON ;; # Enable testing if the flag is passed
+        -m|--memory-check) USE_VALGRIND=ON ;;
+        -r|--run)          RUN_NEURAL=ON ;;     # Enable running the main program if the flag is passed
+        -v|--verbose)      VERBOSE=ON ;;        # Enable verbose output if the flag is passed
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -54,6 +56,12 @@ if [ $MATH_LIB_TESTS == "ON" ]; then
     echo "Running tests..."
     ctest --color --output-on-failure --progress
     exit_on_failure "Tests"
+fi
+
+if [ $USE_VALGRIND == "ON" ]; then
+    echo "Running Valgrind..."
+    valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./neural
+    exit_on_failure "Valgrind"
 fi
 
 if [ $RUN_NEURAL == "ON" ]; then

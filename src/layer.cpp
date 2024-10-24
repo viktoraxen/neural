@@ -10,14 +10,14 @@ std::ostream& operator<<(std::ostream& os, Activation color)
 }
 
 Layer::Layer(int inputs, int width, Activation activation)
-    : m_weights(Math::Matrix::filled(inputs, width, 1.0))
-    , m_biases(Math::Matrix::filled(1, width, 0.0))
+    : m_weights(inputs, width, 1.0)
+    , m_biases(1, width, 0.0)
     , m_activation(activation)
 {}
 
 Math::Matrix Layer::forward(const Math::Matrix& input) const
 {
-    Math::Matrix a = input.multiply(m_weights) + m_biases;
+    Matrix a = input.multiply(m_weights) + m_biases;
 
     switch (m_activation)
     {

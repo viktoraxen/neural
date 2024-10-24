@@ -1,4 +1,5 @@
 #include "network.hpp"
+#include "math.hpp"
 
 #include <stdexcept>
 #include <iostream>

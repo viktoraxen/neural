@@ -7,31 +7,40 @@ double Math::sigmoid(double a)
     return 1 / (1 + exp(-a)); 
 }
 
-std::vector<double> Math::softmax(std::vector<double> A)
+void Math::softmax(double* A, double* Z, int size)
 {
-    std::vector<double> E(A.size());
+    double E[size];
+    double E_sum = 0;
 
-    for (int i = 0; i < A.size(); i++)
+    for (int i = 0; i < size; i++)
     {
         E[i] = exp(A[i]);
+        E_sum += E[i];
     }
 
-    double E_sum = std::reduce(E.begin(), E.end(), 0.0);
-
-    std::vector<double> Z(E.size());
-
-    for (int i = 0; i < A.size(); i++)
+    for (int i = 0; i < size; i++)
     {
         Z[i] = E[i] / E_sum;
     }
+}
+
+double* Math::softmax(double* A, int size)
+{
+    double* Z = new double[size];
+
+    softmax(A, Z, size);
 
     return Z;
 }
 
-// std::vector<double> Math::cross_entropy(std::vector<double> A, std::vector<double> B)
-// {
-//     // if (A.size() != B.size())
-//     //     throw std::invalid_argument("A and B must have the same size");
-//
-//     
-// }
+double Math::cross_entropy(double* A, double* B, int size)
+{
+    double sum = 0;
+
+    for (int i = 0; i < size; i++)
+    {
+        sum += A[i] * log(B[i]);
+    }
+
+    return -sum / size;
+}

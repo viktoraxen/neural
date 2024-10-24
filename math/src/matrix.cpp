@@ -23,9 +23,16 @@ namespace Math
         : m_rows(rows)
         , m_cols(cols)
     {
+        m_data = new double*[rows];
+
         for (int i = 0; i < rows; i++)
         {
-            m_data.push_back(std::vector<double>(cols, val));
+            m_data[i] = new double[cols];
+
+            for (int j = 0; j < cols; j++)
+            {
+                m_data[i][j] = val;
+            }
         }
     }
 
@@ -41,9 +48,15 @@ namespace Math
         if (this == &other)
             return *this;
 
+        destroy();
         copy(other);
 
         return *this;
+    }
+
+    Matrix::~Matrix()
+    {
+        destroy();
     }
 
     bool Matrix::operator==(const Matrix& other) const
@@ -51,7 +64,16 @@ namespace Math
         if (m_rows != other.m_rows || m_cols != other.m_cols)
             return false;
 
-        return m_data == other.m_data;
+        for (int i = 0; i < m_rows; i++)
+        {
+            for (int j = 0; j < m_cols; j++)
+            {
+                if (m_data[i][j] != other.m_data[i][j])
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     int Matrix::determinant() const
@@ -140,16 +162,30 @@ namespace Math
     Matrix Matrix::softmax() const
     {
         // TODO: Optimize?
-        Matrix result(m_rows, 1);
+        Matrix result(m_rows, m_cols);
 
-        std::vector<std::vector<double>> E;
-
-        for (const auto& row : m_data)
+        for (int i = 0; i < m_rows; i++)
         {
-            E.push_back(Math::softmax(row));
+            Math::softmax(m_data[i], result[i], m_cols);
         }
 
-        result.m_data = E;
+        return result;
+    }
+
+    Matrix Matrix::cross_entropy(const Matrix& other) const
+    {
+        if (m_rows != other.m_rows || m_cols != other.m_cols)
+            throw std::runtime_error("Matrix dimensions do not match");
+
+        Matrix result(m_rows, 1);
+
+        for (int i = 0; i < m_rows; i++)
+        {
+            for (int j = 0; j < m_cols; j++)
+            {
+                result[i][j] = Math::cross_entropy(m_data[i], other.m_data[i], m_cols);
+            }
+        }
 
         return result;
     }
@@ -198,7 +234,30 @@ namespace Math
     {
         m_rows = other.m_rows;
         m_cols = other.m_cols;
-        m_data = other.m_data;
+
+        m_data = new double*[m_rows];
+        
+        for (int i = 0; i < m_rows; i++)
+        {
+            m_data[i] = new double[m_cols];
+
+            for (int j = 0; j < m_cols; j++)
+            {
+                m_data[i][j] = other.m_data[i][j];
+            }
+        }
+    }
+
+    void Matrix::destroy()
+    {
+        for (int i = 0; i < m_rows; i++)
+        {
+            if (m_data[i] != nullptr)
+                delete[] m_data[i];
+        }
+
+        if (m_data != nullptr)
+            delete[] m_data;
     }
 
     Matrix Matrix::scalar_operation(double scalar, std::function<double(double, double)> op) const
@@ -239,29 +298,14 @@ namespace Math
 
     void Matrix::print() const
     {
-        for (auto& row : m_data)
+        for (int i = 0; i < m_rows; i++)
         {
-            for (auto& elem : row)
+            for (int j = 0; j < m_cols; j++)
             {
-                std::cout << elem << "\t";
+                std::cout << m_data[i][j] << "\t";
             }
             std::cout << std::endl;
         }
-    }
-
-    Matrix Matrix::filled(int rows, int cols, double value)
-    {
-        Matrix result(rows, cols);
-
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < cols; j++)
-            {
-                result[i][j] = value;
-            }
-        }
-
-        return result;
     }
 
     Matrix Matrix::identity(int size)
@@ -276,18 +320,11 @@ namespace Math
         return result;
     }
 
-    Matrix Matrix::stack(const Matrix& a, int rows)
+    Matrix Matrix::cross(const Matrix& a, const Matrix& b)
     {
-        Matrix result(rows, a.cols());
+        if (a.cols() != b.rows())
+            throw std::runtime_error("Matrix dimensions do not match");
 
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < a.cols(); j++)
-            {
-                result[i][j] = a[0][j];
-            }
-        }
-
-        return result;
+        return a.T().multiply(b);
     }
 }
