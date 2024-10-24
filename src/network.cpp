@@ -3,34 +3,19 @@
 #include <stdexcept>
 #include <iostream>
 
-Network::Network(int inputs, int depth, int width, int outputs)
+Network::Network(int inputs)
     : m_inputs(inputs)
-    , m_depth(depth)
-    , m_width(width)
-    , m_outputs(outputs)
+    , m_layers(std::vector<Layer>())
+{}
+
+void Network::add_layer(int width, Activation activation)
 {
-    m_layers = std::vector<Layer>();
+    int inputs = m_layers.empty() ? m_inputs : m_layers.back().width();
 
-    m_layers.push_back(Layer(m_inputs, m_width));
-
-    for (int i = 0; i < m_depth - 1; i++)
-    {
-        m_layers.push_back(Layer(m_width, m_width));
-    }
-
-    m_layers.push_back(Layer(m_width, m_outputs));
+    m_layers.push_back(Layer(inputs, width, activation));
 }
 
-Matrix Network::forward_layer(const Layer& layer, const Matrix& input) const
-{
-    Matrix stacked_biases = Matrix::stack(layer.biases(), input.rows());
-
-    Matrix a = input.multiply(layer.weights()) + stacked_biases;
-
-    return a.sigmoid();
-}
-
-Matrix Network::predict(const Matrix& input, Matrix& output) const
+Matrix Network::predict(const Matrix& input) const
 {
     if (input.cols() != m_inputs || input.rows() != 1)
         throw std::runtime_error("Invalid input size");
@@ -45,12 +30,33 @@ Matrix Network::predict(const Matrix& input, Matrix& output) const
     return current_input;
 }
 
+void Network::learn(const Math::Matrix& input, 
+                    const Math::Matrix& target, 
+                    const double learning_rate,
+                    const double epochs)
+{
+    if (input.cols() != m_inputs)
+        throw std::runtime_error("Invalid input size (input size does not match network input size).");
+
+    if (target.cols() != outputs())
+        throw std::runtime_error("Invalid output size (target size does not match network output size).");
+
+    if (input.rows() != target.rows())
+        throw std::runtime_error("Invalid batch size (input size does not match target size).");
+
+    for (int i = 0; i < epochs; i++)
+    {
+        Matrix output = predict(input);
+    }
+}
+
 void Network::print() const
 {
     std::cout << "Layers:" << std::endl;
 
     for (const auto& layer : m_layers)
     {
+        std::cout << "  ";
         layer.print();
     }
 }

@@ -52,7 +52,7 @@ exit_on_failure "Make"
 
 if [ $MATH_LIB_TESTS == "ON" ]; then
     echo "Running tests..."
-    ctest --color --output-on-failure
+    ctest --color --output-on-failure --progress
     exit_on_failure "Tests"
 fi
 

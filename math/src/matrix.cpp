@@ -19,13 +19,13 @@ namespace Math
     {}
 
     // Constructor
-    Matrix::Matrix(int rows, int cols)
+    Matrix::Matrix(int rows, int cols, double val)
         : m_rows(rows)
         , m_cols(cols)
     {
         for (int i = 0; i < rows; i++)
         {
-            m_data.push_back(std::vector<double>(cols, 0.));
+            m_data.push_back(std::vector<double>(cols, val));
         }
     }
 
@@ -135,6 +135,23 @@ namespace Math
     Matrix Matrix::sigmoid() const
     {
         return scalar_operation(0, [](double a, double _) { return Math::sigmoid(a); });
+    }
+
+    Matrix Matrix::softmax() const
+    {
+        // TODO: Optimize?
+        Matrix result(m_rows, 1);
+
+        std::vector<std::vector<double>> E;
+
+        for (const auto& row : m_data)
+        {
+            E.push_back(Math::softmax(row));
+        }
+
+        result.m_data = E;
+
+        return result;
     }
 
     Matrix Matrix::operator+(const Matrix& other) const

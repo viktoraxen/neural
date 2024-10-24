@@ -11,7 +11,7 @@ namespace Math
         static Matrix stack(const Matrix& a, int rows);
 
         Matrix();
-        Matrix(int rows, int cols);
+        Matrix(int rows, int cols = 1, double val = 0.0);
         Matrix(const Matrix& other);
         Matrix& operator=(const Matrix& other);
 
@@ -24,6 +24,7 @@ namespace Math
         int cols() const { return m_cols; }
 
         Matrix sigmoid() const;
+        Matrix softmax() const;
 
         int determinant() const;
         int det() const { return determinant(); };

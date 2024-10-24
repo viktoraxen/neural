@@ -1,5 +1,7 @@
-#include "math.hpp"
+#include <matrix.hpp>
 #include <gtest/gtest.h>
+
+#include <cmath>
 
 using namespace Math;
 
@@ -169,6 +171,50 @@ TEST(Matrix, Sigmoid)
     EXPECT_EQ(sig[1][0], 1 / (1 + exp(-2)));
     EXPECT_EQ(sig[0][1], 1 / (1 + exp(-3)));
     EXPECT_EQ(sig[1][1], 1 / (1 + exp(-4)));
+}
+
+TEST(Matrix, Softmax)
+{
+    Matrix mat(3, 3);
+
+    mat[0][0] = 1;
+    mat[0][1] = 2;
+    mat[0][2] = 3;
+    mat[1][0] = 4;
+    mat[1][1] = 5;
+    mat[1][2] = 6;
+    mat[2][0] = 7;
+    mat[2][1] = 8;
+    mat[2][2] = 9;
+
+    Matrix sm = mat.softmax();
+
+    double E1 = exp(1);
+    double E2 = exp(2);
+    double E3 = exp(3);
+    double E_sum = E1 + E2 + E3;
+
+    EXPECT_EQ(sm[0][0], E1 / E_sum);
+    EXPECT_EQ(sm[0][1], E2 / E_sum);
+    EXPECT_EQ(sm[0][2], E3 / E_sum);
+
+    E1 = exp(4);
+    E2 = exp(5);
+    E3 = exp(6);
+    E_sum = E1 + E2 + E3;
+
+    EXPECT_EQ(sm[1][0], E1 / E_sum);
+    EXPECT_EQ(sm[1][1], E2 / E_sum);
+    EXPECT_EQ(sm[1][2], E3 / E_sum);
+
+    E1 = exp(7);
+    E2 = exp(8);
+    E3 = exp(9);
+    E_sum = E1 + E2 + E3;
+
+    EXPECT_EQ(sm[2][0], E1 / E_sum);
+    EXPECT_EQ(sm[2][1], E2 / E_sum);
+    EXPECT_EQ(sm[2][2], E3 / E_sum);
 }
 
 TEST(Matrix, Determinant)
