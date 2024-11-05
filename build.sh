@@ -1,11 +1,16 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # Set the build directory
 BUILD_DIR="build"
 
 # Function to exit the script if a command fails
 function exit_on_failure() {
     if [ $? -ne 0 ]; then
+        printf "${RED}X\n"
         echo "Error: $1 failed. Exiting."
         exit 1
     fi
@@ -19,7 +24,7 @@ VERBOSE=OFF
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -t|--testing)      MATH_LIB_TESTS=ON ;; # Enable testing if the flag is passed
+        -t|--testing)      RUN_TESTS=ON ;; # Enable testing if the flag is passed
         -m|--memory-check) USE_VALGRIND=ON ;;
         -r|--run)          RUN_NEURAL=ON ;;     # Enable running the main program if the flag is passed
         -v|--verbose)      VERBOSE=ON ;;        # Enable verbose output if the flag is passed
@@ -36,24 +41,26 @@ fi
 
 cd $BUILD_DIR
 
-echo "Running CMake..."
+printf "Running CMake...    "
 if [ $VERBOSE == "ON" ]; then
-    cmake -S .. -DMATH_LIB_TESTS=$MATH_LIB_TESTS
+    cmake -S .. -DRUN_TESTS=$RUN_TESTS
 else
-    cmake -S .. -DMATH_LIB_TESTS=$MATH_LIB_TESTS > /dev/null
+    cmake -S .. -DRUN_TESTS=$RUN_TESTS > /dev/null
 fi
 exit_on_failure "CMake"
+printf "${GREEN}O\n${NC}"
 
-echo "Building Neural..."
+printf "Building Neural...  "
 if [ $VERBOSE == "ON" ]; then
     make --silent -j$(nproc)   # or just use `make` if you don't want parallel builds
 else
     make --silent -j$(nproc) > /dev/null
 fi
 exit_on_failure "Make"
+printf "${GREEN}O\n${NC}"
 
-if [ $MATH_LIB_TESTS == "ON" ]; then
-    echo "Running tests..."
+if [ $RUN_TESTS == "ON" ]; then
+    echo "Running tests...   "
     ctest --color --output-on-failure --progress
     exit_on_failure "Tests"
 fi

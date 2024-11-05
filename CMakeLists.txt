@@ -24,3 +24,9 @@ target_include_directories(neural PRIVATE
 target_link_libraries(neural PRIVATE 
     math
 )
+
+option(RUN_TESTS "Build the math library tests" OFF)
+
+if (RUN_TESTS)
+    add_subdirectory(test)
+endif()

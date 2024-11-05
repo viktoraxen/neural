@@ -102,6 +102,50 @@ TEST(Matrix, ElementwiseUnmatchingDimensions)
     EXPECT_EQ(mat3.cols(), 3);
 }
 
+TEST(Matrix, AugmentedAssignment)
+{
+    Matrix mat(2, 2);
+    Matrix mat2(2, 2);
+
+    mat[0][0] = 1;
+    mat[1][0] = 2;
+    mat[0][1] = 3;
+    mat[1][1] = 4;
+
+    mat2[0][0] = 5;
+    mat2[1][0] = 6;
+    mat2[0][1] = 7;
+    mat2[1][1] = 8;
+
+    mat += mat2;
+
+    EXPECT_EQ(mat[0][0], 1 + 5);
+    EXPECT_EQ(mat[1][0], 2 + 6);
+    EXPECT_EQ(mat[0][1], 3 + 7);
+    EXPECT_EQ(mat[1][1], 4 + 8);
+
+    mat -= mat2;
+
+    EXPECT_EQ(mat[0][0], 1);
+    EXPECT_EQ(mat[1][0], 2);
+    EXPECT_EQ(mat[0][1], 3);
+    EXPECT_EQ(mat[1][1], 4);
+
+    mat *= mat2;
+
+    EXPECT_EQ(mat[0][0], 1 * 5);
+    EXPECT_EQ(mat[1][0], 2 * 6);
+    EXPECT_EQ(mat[0][1], 3 * 7);
+    EXPECT_EQ(mat[1][1], 4 * 8);
+
+    mat /= mat2;
+
+    EXPECT_EQ(mat[0][0], 1);
+    EXPECT_EQ(mat[1][0], 2);
+    EXPECT_EQ(mat[0][1], 3);
+    EXPECT_EQ(mat[1][1], 4);
+}
+
 TEST(Matrix, MatrixMultiplication)
 {
     Matrix mat1(2, 4);
@@ -217,6 +261,57 @@ TEST(Matrix, Softmax)
     EXPECT_EQ(sm[2][2], E3 / E_sum);
 }
 
+TEST(Matrix, SumRows)
+{
+    Matrix mat(2, 3);
+
+    mat[0][0] = 1;
+    mat[0][1] = 2;
+    mat[0][2] = 3;
+    mat[1][0] = 4;
+    mat[1][1] = 5;
+    mat[1][2] = 6;
+
+    Matrix sum = mat.sum_rows();
+
+    EXPECT_EQ(sum[0][0], 1 + 2 + 3);
+    EXPECT_EQ(sum[1][0], 4 + 5 + 6);
+}
+
+TEST(Matrix, SquareElements)
+{
+    Matrix mat(2, 2);
+
+    mat[0][0] = 1;
+    mat[1][0] = 2;
+    mat[0][1] = 3;
+    mat[1][1] = 4;
+
+    Matrix sq = mat.square_elements();
+
+    EXPECT_EQ(sq[0][0], 1);
+    EXPECT_EQ(sq[1][0], 4);
+    EXPECT_EQ(sq[0][1], 9);
+    EXPECT_EQ(sq[1][1], 16);
+}
+
+TEST(Matrix, LogElements)
+{
+    Matrix mat(2, 2);
+
+    mat[0][0] = 1;
+    mat[1][0] = 2;
+    mat[0][1] = 3;
+    mat[1][1] = 4;
+
+    Matrix log_result = mat.log_elements();
+
+    EXPECT_EQ(log_result[0][0], log(1));
+    EXPECT_EQ(log_result[1][0], log(2));
+    EXPECT_EQ(log_result[0][1], log(3));
+    EXPECT_EQ(log_result[1][1], log(4));
+}
+
 TEST(Matrix, Determinant)
 {
     Matrix mat(2, 2);
@@ -264,6 +359,50 @@ TEST(Matrix, Determinant)
     EXPECT_EQ(mat3.det(), -63);
 }
 
+// TEST(Matrix, CrossEntropy)
+// {
+//     Matrix mat(2, 3);
+//     Matrix mat2(2, 3);
+//
+//     mat[0][0] = 0;
+//     mat[0][1] = 1;
+//     mat[0][2] = 0;
+//
+//     mat[1][0] = 1;
+//     mat[1][1] = 0;
+//     mat[1][2] = 0;
+//
+//     mat2[0][0] = 0.2;
+//     mat2[0][1] = 0.7;
+//     mat2[0][2] = 0.1;
+//
+//     mat2[1][0] = 0.2;
+//     mat2[1][1] = 0.7;
+//     mat2[1][2] = 0.1;
+//
+//     Matrix res(2, 1);
+//     res[0][0] = -log(0.7);
+//     res[1][0] = -log(0.2);
+//
+//     EXPECT_EQ(mat.cross_entropy(mat2), res);
+// }
+
+// TEST(Matrix, CrossEntropyLoss)
+// {
+//     Matrix mat(1, 3);
+//     Matrix mat2(1, 3);
+//
+//     mat[0][0] = 0;
+//     mat[0][1] = 1;
+//     mat[0][2] = 0;
+//
+//     mat2[0][0] = 0.2;
+//     mat2[0][1] = 0.7;
+//     mat2[0][2] = 0.1;
+//
+//     EXPECT_EQ(mat.cross_entropy_loss(mat2), -log(0.7));
+// }
+
 TEST(Matrix, Identity)
 {
     Matrix mat = Matrix::identity(3);
@@ -277,27 +416,4 @@ TEST(Matrix, Identity)
     EXPECT_EQ(mat[1][2], 0);
     EXPECT_EQ(mat[2][0], 0);
     EXPECT_EQ(mat[2][1], 0);
-}
-
-TEST(Matrix, Stack)
-{
-    Matrix row(1, 5);
-
-    row[0][0] = 1;
-    row[0][1] = 2;
-    row[0][2] = 3;
-    row[0][3] = 4;
-    row[0][4] = 5;
-
-    Matrix mat = Matrix::stack(row, 3);
-
-    EXPECT_EQ(mat.rows(), 3);
-    EXPECT_EQ(mat.cols(), 5);
-
-    for (int i = 0; i < 5; i++)
-    {
-        EXPECT_EQ(mat[0][i], i + 1);
-        EXPECT_EQ(mat[1][i], i + 1);
-        EXPECT_EQ(mat[2][i], i + 1);
-    }
 }

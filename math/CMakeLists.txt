@@ -13,8 +13,8 @@ set_target_properties(math PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-option(MATH_LIB_TESTS "Build the math library tests" OFF)
+option(RUN_TESTS "Build the math library tests" OFF)
 
-if(MATH_LIB_TESTS)
+if(RUN_TESTS)
     add_subdirectory(test)
 endif()

@@ -3,8 +3,11 @@
 #include "math.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <cassert>
+#include <iostream>
+#include <numeric>
+
+#define UNARY(op) [](double a) { return op(a); }
 
 #define LAMBDA_ADD [](double a, double b) { return a + b; }
 #define LAMBDA_SUB [](double a, double b) { return a - b; }
@@ -23,15 +26,13 @@ namespace Math
         : m_rows(rows)
         , m_cols(cols)
     {
-        m_data = new double*[rows];
+        m_data = new double[m_rows * m_cols];
 
-        for (int i = 0; i < rows; i++)
+        for (int i = 0; i < m_rows; i++)
         {
-            m_data[i] = new double[cols];
-
-            for (int j = 0; j < cols; j++)
+            for (int j = 0; j < m_cols; j++)
             {
-                m_data[i][j] = val;
+                elem(i, j) = val;
             }
         }
     }
@@ -54,6 +55,23 @@ namespace Math
         return *this;
     }
 
+    // Move constructor
+    Matrix::Matrix(Matrix&& other) noexcept
+    {
+        move(other);
+    }
+
+    // Move assignment operator
+    Matrix& Matrix::operator=(Matrix&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+
+        move(other);
+
+        return *this;
+    }
+
     Matrix::~Matrix()
     {
         destroy();
@@ -68,7 +86,7 @@ namespace Math
         {
             for (int j = 0; j < m_cols; j++)
             {
-                if (m_data[i][j] != other.m_data[i][j])
+                if (elem(i, j) != other.elem(i, j))
                     return false;
             }
         }
@@ -84,11 +102,11 @@ namespace Math
 
         if (m_rows == 1)
         {
-            result = m_data[0][0];
+            result = elem(0, 0);
         }
         else if (m_rows == 2)
         {
-            result = m_data[0][0] * m_data[1][1] - m_data[0][1] * m_data[1][0];
+            result = elem(0, 0) * elem(1, 1) - elem(0, 1) * elem(1, 0);
         }
         else
         {
@@ -102,16 +120,16 @@ namespace Math
                     {
                         if (k < i)
                         {
-                            submatrix[j - 1][k] = m_data[j][k];
+                            submatrix.elem(j - 1, k) = elem(j, k);
                         }
                         else if (k > i)
                         {
-                            submatrix[j - 1][k - 1] = m_data[j][k];
+                            submatrix.elem(j - 1, k - 1) = elem(j, k);
                         }
                     }
                 }
 
-                result += m_data[0][i] * submatrix.det() * (i % 2 == 0 ? 1 : -1);
+                result += elem(0, i) * submatrix.det() * (i % 2 == 0 ? 1 : -1);
             }
         }
 
@@ -126,7 +144,7 @@ namespace Math
         {
             for (int j = 0; j < m_cols; j++)
             {
-                result.m_data[j][i] = m_data[i][j];
+                result.elem(j, i) = elem(i, j);
             }
         }
 
@@ -136,7 +154,7 @@ namespace Math
     Matrix Matrix::multiply(const Matrix& other) const
     {
         if (m_cols != other.m_rows)
-            throw std::runtime_error("Matrix dimensions do not match");
+            throw std::runtime_error("Left hand columns (" + std::to_string(m_cols) + ") do not match right hand rows (" + std::to_string(other.m_rows) + ")");
 
         Matrix result(m_rows, other.m_cols);
 
@@ -146,7 +164,7 @@ namespace Math
             {
                 for (int k = 0; k < m_cols; k++)
                 {
-                    result.m_data[i][j] += m_data[i][k] * other.m_data[k][j];
+                    result.elem(i, j) += elem(i, k) * other.elem(k, j);
                 }
             }
         }
@@ -154,9 +172,63 @@ namespace Math
         return result;
     }
 
+    Matrix Matrix::sum_rows() const
+    {
+        Matrix result(m_rows, 1);
+
+        for (int i = 0; i < m_rows; i++)
+        {
+            double sum = 0;
+
+            for (int j = 0; j < m_cols; j++)
+            {
+                sum += elem(i, j);
+            }
+
+            result.elem(i, 0) = sum;
+        }
+
+        return result;
+    }
+
+    Matrix Matrix::sum_cols() const
+    {
+        Matrix result(1, m_cols);
+
+        for (int i = 0; i < m_cols; i++)
+        {
+            double sum = 0;
+
+            for (int j = 0; j < m_rows; j++)
+            {
+                sum += elem(i, j);
+            }
+
+            result.elem(0, i) = sum;
+        }
+
+        return result;
+    }
+
+    Matrix Matrix::square_elements() const
+    {
+        Matrix copy = *this;
+        return copy * copy;
+    }
+
+    Matrix Matrix::log_elements() const
+    {
+        return unary_operation(UNARY(log));
+    }
+
     Matrix Matrix::sigmoid() const
     {
-        return scalar_operation(0, [](double a, double _) { return Math::sigmoid(a); });
+        return unary_operation(UNARY(Math::sigmoid));
+    }
+
+    Matrix Matrix::sigmoid_derivative() const
+    {
+        return unary_operation(UNARY(Math::sigmoid_derivative));
     }
 
     Matrix Matrix::softmax() const
@@ -166,7 +238,7 @@ namespace Math
 
         for (int i = 0; i < m_rows; i++)
         {
-            Math::softmax(m_data[i], result[i], m_cols);
+            Math::softmax(row(i), result.row(i), m_cols);
         }
 
         return result;
@@ -181,14 +253,22 @@ namespace Math
 
         for (int i = 0; i < m_rows; i++)
         {
-            for (int j = 0; j < m_cols; j++)
-            {
-                result[i][j] = Math::cross_entropy(m_data[i], other.m_data[i], m_cols);
-            }
+            result.elem(i, 0) = Math::cross_entropy(row(i), other.row(i), m_cols);
         }
 
         return result;
     }
+
+    double Matrix::cross_entropy_loss(const Matrix& other) const
+    {
+        Matrix result = cross_entropy(other).T();
+
+        return std::accumulate(result[0], result[0] + m_rows, 0.0) / m_rows;
+    }
+
+    /*
+     * Binary operators
+     */
 
     Matrix Matrix::operator+(const Matrix& other) const
     {
@@ -210,24 +290,56 @@ namespace Math
         return elementwise_operation(other, LAMBDA_DIV);
     }
 
+    /*
+     * Augmented assignment operators
+     */
+
+    Matrix& Matrix::operator+=(const Matrix& other)
+    {
+        elementwise_operation(other, LAMBDA_ADD);
+        return *this;
+    }
+
+    Matrix& Matrix::operator-=(const Matrix& other)
+    {
+        elementwise_operation(other, LAMBDA_SUB);
+        return *this;
+    }
+
+    Matrix& Matrix::operator*=(const Matrix& other)
+    {
+        elementwise_operation(other, LAMBDA_MUL);
+        return *this;
+    }
+
+    Matrix& Matrix::operator/=(const Matrix& other)
+    {
+        elementwise_operation(other, LAMBDA_DIV);
+        return *this;
+    }
+
+    /*
+     * Elementwise scalar operators
+     */
+
     Matrix Matrix::operator+(double scalar) const
     {
-        return scalar_operation(scalar, LAMBDA_ADD);
+        return binary_operation(scalar, LAMBDA_ADD);
     }
 
     Matrix Matrix::operator-(double scalar) const
     {
-        return scalar_operation(scalar, LAMBDA_SUB);
+        return binary_operation(scalar, LAMBDA_SUB);
     }
 
     Matrix Matrix::operator*(double scalar) const
     {
-        return scalar_operation(scalar, LAMBDA_MUL);
+        return binary_operation(scalar, LAMBDA_MUL);
     }
 
     Matrix Matrix::operator/(double scalar) const
     {
-        return scalar_operation(scalar, LAMBDA_DIV);
+        return binary_operation(scalar, LAMBDA_DIV);
     }
 
     void Matrix::copy(const Matrix& other)
@@ -235,32 +347,30 @@ namespace Math
         m_rows = other.m_rows;
         m_cols = other.m_cols;
 
-        m_data = new double*[m_rows];
-        
-        for (int i = 0; i < m_rows; i++)
-        {
-            m_data[i] = new double[m_cols];
+        m_data = new double[m_rows * m_cols];
+        std::copy(other.m_data, other.m_data + m_rows * m_cols, m_data);
+    }
 
-            for (int j = 0; j < m_cols; j++)
-            {
-                m_data[i][j] = other.m_data[i][j];
-            }
-        }
+    void Matrix::move(Matrix& other)
+    {
+        m_rows = other.m_rows;
+        m_cols = other.m_cols;
+        m_data = other.m_data;
+
+        other.m_rows = 0;
+        other.m_cols = 0;
+        other.m_data = nullptr;
     }
 
     void Matrix::destroy()
     {
-        for (int i = 0; i < m_rows; i++)
-        {
-            if (m_data[i] != nullptr)
-                delete[] m_data[i];
-        }
-
         if (m_data != nullptr)
             delete[] m_data;
+        
+        m_data = nullptr;
     }
 
-    Matrix Matrix::scalar_operation(double scalar, std::function<double(double, double)> op) const
+    Matrix Matrix::unary_operation(std::function<double(double)> op) const
     {
         Matrix result(m_rows, m_cols);
 
@@ -268,11 +378,40 @@ namespace Math
         {
             for (int j = 0; j < m_cols; j++)
             {
-                result.m_data[i][j] = op(m_data[i][j], scalar);
+                result.elem(i, j) = op(elem(i, j));
             }
         }
 
         return result;
+    }
+
+    Matrix Matrix::binary_operation(double scalar, std::function<double(double, double)> op) const
+    {
+        Matrix result(m_rows, m_cols);
+
+        for (int i = 0; i < m_rows; i++)
+        {
+            for (int j = 0; j < m_cols; j++)
+            {
+                result.elem(i, j) = op(elem(i, j), scalar);
+            }
+        }
+
+        return result;
+    }
+
+    void Matrix::elementwise_operation(const Matrix& other, std::function<double(double, double)> op)
+    {
+        for (int i = 0; i < m_rows; i++)
+        {
+            for (int j = 0; j < m_cols; j++)
+            {
+                double elem1 = i >= m_rows || j >= m_cols ? 0.0 : elem(i, j);
+                double elem2 = i >= other.m_rows || j >= other.m_cols ? 0.0 : other.elem(i, j);
+
+                elem(i, j) = op(elem1, elem2);
+            }
+        }
     }
 
     Matrix Matrix::elementwise_operation(const Matrix& other, std::function<double(double, double)> op) const
@@ -286,10 +425,10 @@ namespace Math
         {
             for (int j = 0; j < cols; j++)
             {
-                double elem1 = i >= m_rows || j >= m_cols ? 0.0 : m_data[i][j];
-                double elem2 = i >= other.m_rows || j >= other.m_cols ? 0.0 : other.m_data[i][j];
+                double elem1 = i >= m_rows || j >= m_cols ? 0.0 : elem(i, j);
+                double elem2 = i >= other.m_rows || j >= other.m_cols ? 0.0 : other.elem(i, j);
 
-                result.m_data[i][j] = op(elem1, elem2);
+                result.elem(i, j) = op(elem1, elem2);
             }
         }
 
@@ -302,7 +441,7 @@ namespace Math
         {
             for (int j = 0; j < m_cols; j++)
             {
-                std::cout << m_data[i][j] << "\t";
+                std::cout << elem(i, j) << "\t";
             }
             std::cout << std::endl;
         }
@@ -314,7 +453,7 @@ namespace Math
 
         for (int i = 0; i < size; i++)
         {
-            result[i][i] = 1;
+            result.elem(i, i) = 1;
         }
 
         return result;

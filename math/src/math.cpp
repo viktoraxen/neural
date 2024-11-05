@@ -1,10 +1,13 @@
 #include "math.hpp"
 
-#include <numeric>
-
 double Math::sigmoid(double a)
 { 
     return 1 / (1 + exp(-a)); 
+}
+
+double Math::sigmoid_derivative(double a)
+{ 
+    return sigmoid(a) * (1 - sigmoid(a)); 
 }
 
 void Math::softmax(double* A, double* Z, int size)
@@ -42,5 +45,5 @@ double Math::cross_entropy(double* A, double* B, int size)
         sum += A[i] * log(B[i]);
     }
 
-    return -sum / size;
+    return -sum;
 }

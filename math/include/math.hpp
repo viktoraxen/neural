@@ -6,6 +6,7 @@
 namespace Math
 {
     double sigmoid(double a); 
+    double sigmoid_derivative(double a);
 
     void    softmax(double* A, double* Z, int size);
     double* softmax(double* A, int size);
