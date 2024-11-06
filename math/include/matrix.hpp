@@ -8,6 +8,7 @@ namespace Math
         static Matrix identity(int size);
         static Matrix I(int size) { return identity(size); }
         static Matrix cross(const Matrix& a, const Matrix& b);
+        static Matrix random(int rows, int cols, double min = -0.5, double max = 0.5);
 
         Matrix();
         Matrix(int rows, int cols = 1, double val = 0.0);
@@ -29,6 +30,10 @@ namespace Math
         Matrix sigmoid() const;
         Matrix sigmoid_derivative() const;
         Matrix softmax() const;
+        Matrix relu() const;
+        Matrix relu_derivative() const;
+        Matrix tanh() const;
+        Matrix tanh_derivative() const;
 
         Matrix cross_entropy(const Matrix& other) const;
         double cross_entropy_loss(const Matrix& other) const;

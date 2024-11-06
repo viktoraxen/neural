@@ -16,6 +16,41 @@
 
 namespace Math
 {
+    Matrix Matrix::identity(int size)
+    {
+        Matrix result(size, size);
+
+        for (int i = 0; i < size; i++)
+        {
+            result.elem(i, i) = 1;
+        }
+
+        return result;
+    }
+
+    Matrix Matrix::cross(const Matrix& a, const Matrix& b)
+    {
+        if (a.cols() != b.rows())
+            throw std::runtime_error("Matrix dimensions do not match");
+
+        return a.T().multiply(b);
+    }
+
+    Matrix Matrix::random(int rows, int cols, double min, double max)
+    {
+        Matrix result(rows, cols);
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                result.elem(i, j) = Math::random(min, max);
+            }
+        }
+
+        return result;
+    }
+
     Matrix::Matrix()
         : m_rows(0)
         , m_cols(0)
@@ -244,6 +279,26 @@ namespace Math
         return result;
     }
 
+    Matrix Matrix::relu() const
+    {
+        return unary_operation(UNARY(Math::relu));
+    }
+
+    Matrix Matrix::relu_derivative() const
+    {
+        return unary_operation(UNARY(Math::relu_derivative));
+    }
+
+    Matrix Matrix::tanh() const
+    {
+        return unary_operation(UNARY(Math::tanh));
+    }
+
+    Matrix Matrix::tanh_derivative() const
+    {
+        return unary_operation(UNARY(Math::tanh_derivative));
+    }
+
     Matrix Matrix::cross_entropy(const Matrix& other) const
     {
         if (m_rows != other.m_rows || m_cols != other.m_cols)
@@ -445,25 +500,5 @@ namespace Math
             }
             std::cout << std::endl;
         }
-    }
-
-    Matrix Matrix::identity(int size)
-    {
-        Matrix result(size, size);
-
-        for (int i = 0; i < size; i++)
-        {
-            result.elem(i, i) = 1;
-        }
-
-        return result;
-    }
-
-    Matrix Matrix::cross(const Matrix& a, const Matrix& b)
-    {
-        if (a.cols() != b.rows())
-            throw std::runtime_error("Matrix dimensions do not match");
-
-        return a.T().multiply(b);
     }
 }

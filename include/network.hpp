@@ -18,9 +18,9 @@ public:
         int        width,
         Activation activation);
 
-    Matrix predict(const Math::Matrix& input);
-    void learn(const Math::Matrix& input,
-               const Math::Matrix& target,
+    Matrix predict(const Matrix& input);
+    void learn(const Matrix& input,
+               const Matrix& target,
                const double        learning_rate,
                const double        epochs);
 
@@ -33,9 +33,13 @@ public:
     // DEBUG
     void print() const;
 
-    double loss(const Math::Matrix& output, 
-                const Math::Matrix& target,
+    double loss(const Matrix& output, 
+                const Matrix& target,
                 LossFunction loss_function);
+
+    Matrix loss_gradient(const Matrix& output, 
+                         const Matrix& target,
+                         LossFunction loss_function);
 private:
     int m_inputs;
     std::vector<Layer> m_layers;

@@ -28,3 +28,24 @@ TEST(Math, CrossEntropy)
 
     EXPECT_EQ(-log(0.7), cross_entropy(A.data(), B.data(), A.size()));
 }
+
+TEST(Math, Random)
+{
+    double r;
+
+    for (int i = 0; i < 1000; i++)
+    {
+        r = random(0, 1);
+
+        EXPECT_GE(r, 0);
+        EXPECT_LE(r, 1);
+    }
+
+    for (int i = 0; i < 1000; i++)
+    {
+        r = random(1, 2);
+
+        EXPECT_GE(r, 1);
+        EXPECT_LE(r, 2);
+    }
+}

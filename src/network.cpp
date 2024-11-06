@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 
 #define PRINT_SHAPE(x, name) std::cout << name << " shape: " << x.shape().first << ", " << x.shape().second << std::endl;
 
@@ -32,8 +33,8 @@ Matrix Network::predict(const Matrix& input)
     return current_input;
 }
 
-void Network::learn(const Math::Matrix& input, 
-                    const Math::Matrix& target, 
+void Network::learn(const Matrix& input, 
+                    const Matrix& target, 
                     const double learning_rate,
                     const double epochs)
 {
@@ -50,10 +51,12 @@ void Network::learn(const Math::Matrix& input,
 
         // The loss function between the output and the target
         double error = loss(output, target, LossFunction::MeanSquaredError);
-        // std::cout << "Epoch " << i << " - Error: " << error << std::endl;
+
+        if (i % 10 == 0)
+            std::cout << "Epoch " << i << " - Error: " << error << std::endl;
 
         // Derivative of the loss function with respect to the output
-        Matrix delta = output - target;
+        Matrix delta = loss_gradient(output, target, LossFunction::MeanSquaredError);
 
         for (int i = m_layers.size() - 1; i >= 0; i--)
         {
@@ -65,8 +68,8 @@ void Network::learn(const Math::Matrix& input,
     }
 }
 
-double Network::loss(const Math::Matrix& output, 
-                     const Math::Matrix& target,
+double Network::loss(const Matrix& output, 
+                     const Matrix& target,
                      LossFunction loss_function)
 {
     switch (loss_function)
@@ -80,6 +83,21 @@ double Network::loss(const Math::Matrix& output,
     }
 }
 
+Matrix Network::loss_gradient(const Matrix& output, 
+                              const Matrix& target,
+                              LossFunction loss_function)
+{
+    switch (loss_function)
+    {
+        case LossFunction::MeanSquaredError:
+            return output - target;
+        case LossFunction::CrossEntropy:
+            return Matrix::I(output.rows());
+        default:
+            throw std::runtime_error("Invalid loss function");
+    }
+}
+
 void Network::print() const
 {
     std::cout << "Layers:" << std::endl;
@@ -88,5 +106,18 @@ void Network::print() const
     {
         std::cout << "  ";
         layer.print();
+
+        Matrix weights = layer.weights();
+        Matrix biases = layer.biases();
+
+        for (int i = 0; i < weights.rows(); i++)
+        {
+            for (int j = 0; j < weights.cols(); j++)
+            {
+                std::cout << "    " << std::fixed << std::setprecision(2) << weights[i][j];
+            }
+
+            std::cout << "  :  " << std::fixed << std::setprecision(2) << biases[i][0] << std::endl;
+        }
     }
 }

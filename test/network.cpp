@@ -30,9 +30,9 @@ TEST(Network, Predict)
     network.add_layer(5, Activation::Sigmoid);
     network.add_layer(4, Activation::Sigmoid);
 
-    Math::Matrix input(3, 1, 1.0);
+    Matrix input(3, 1, 1.0);
 
-    Math::Matrix output = network.predict(input);
+    Matrix output = network.predict(input);
 
     EXPECT_EQ(output.rows(), 4);
     EXPECT_EQ(output.cols(), 1);
@@ -42,14 +42,14 @@ TEST(Network, Loss)
 {
     Network network(4);
 
-    Math::Matrix predicted(4, 1, 1.0);
+    Matrix predicted(4, 1, 1.0);
 
     predicted[0][0] = 0.5;
     predicted[1][0] = 0.5;
     predicted[2][0] = 0.5;
     predicted[3][0] = 0.5;
 
-    Math::Matrix target(4, 1, 0);
+    Matrix target(4, 1, 0);
 
     target[0][0] = 1;
     target[3][0] = 1;
@@ -71,4 +71,60 @@ TEST(Network, Loss)
     error = network.loss(predicted, target, LossFunction::MeanSquaredError);
 
     EXPECT_EQ(error, 0.105625);
+}
+
+void testXor(Network& network)
+{
+    Matrix input = Matrix::random(network.inputs(), 1);
+
+    Matrix target(network.outputs(), 1, 0);
+    target[1][0] = 1;
+    target[2][0] = 1;
+
+    network.learn(input, target, 0.5, 150);
+
+    Matrix output = network.predict(input);
+
+    for (int i = 0; i < output.rows(); i++)
+    {
+        EXPECT_NEAR(output[i][0], target[i][0], 0.1);
+    }
+}
+
+TEST(Network, SigmoidNetwork)
+{
+    Network network(3);
+
+    network.add_layer(4, Activation::Sigmoid);
+    network.add_layer(4, Activation::Sigmoid);
+
+    testXor(network);
+}
+
+TEST(Network, ReLUNetwork)
+{
+    Network network(3);
+
+    network.add_layer(4, Activation::ReLU);
+
+    testXor(network);
+}
+
+TEST(Network, ReLUDeepNetwork)
+{
+    Network network(3);
+
+    network.add_layer(4, Activation::ReLU);
+    network.add_layer(4, Activation::ReLU);
+
+    testXor(network);
+}
+
+TEST(Network, TanhNetwork)
+{
+    Network network(3);
+
+    network.add_layer(4, Activation::Tanh);
+
+    testXor(network);
 }

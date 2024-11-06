@@ -1,5 +1,8 @@
 #include "math.hpp"
 
+#include <cstdlib>
+#include <ctime>
+
 double Math::sigmoid(double a)
 { 
     return 1 / (1 + exp(-a)); 
@@ -7,7 +10,8 @@ double Math::sigmoid(double a)
 
 double Math::sigmoid_derivative(double a)
 { 
-    return sigmoid(a) * (1 - sigmoid(a)); 
+    double s = sigmoid(a);
+    return s * (1 - s); 
 }
 
 void Math::softmax(double* A, double* Z, int size)
@@ -36,6 +40,27 @@ double* Math::softmax(double* A, int size)
     return Z;
 }
 
+double Math::relu(double a)
+{ 
+    return a > 0 ? a : 0; 
+}
+
+double Math::relu_derivative(double a)
+{ 
+    return a > 0 ? 1 : 0; 
+}
+
+double Math::tanh(double a)
+{ 
+    return std::tanh(a); 
+}
+
+double Math::tanh_derivative(double a)
+{ 
+    double t = tanh(a);
+    return 1 - t * t; 
+}
+
 double Math::cross_entropy(double* A, double* B, int size)
 {
     double sum = 0;
@@ -46,4 +71,17 @@ double Math::cross_entropy(double* A, double* B, int size)
     }
 
     return -sum;
+}
+
+double Math::random(double min, double max)
+{
+    static bool seeded = false;
+
+    if (!seeded)
+    {
+        srand(time(NULL));
+        seeded = true;
+    }
+
+    return min + (max - min) * rand() / RAND_MAX;
 }
